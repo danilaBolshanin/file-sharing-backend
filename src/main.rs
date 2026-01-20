@@ -1,8 +1,8 @@
 mod config;
-//mod models;
-//mod dtos;
-//mod error;
-//mod db;
+mod models;
+mod dtos;
+mod error;
+mod db;
 
 use axum::http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}};
 use config::Config;
@@ -10,6 +10,14 @@ use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::filter::LevelFilter;
+
+use db::{DBClient, UserExt};
+
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub env: Config,
+    pub db_client: DBClient,
+}
 
 #[tokio::main]
 async fn main() {
@@ -39,6 +47,14 @@ async fn main() {
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
         .allow_credentials(true)
         .allow_methods([Method::GET, Method::POST, Method::PUT]);
+
+    let db_client = DBClient::new(pool);
+    let app_state = AppState {
+        env: config.clone(),
+        db_client: db_client.clone(),
+    };
+
     
-    println!("config: {:?}", cors);
+    
+    println!("config: {:?}", db_client);
 }
