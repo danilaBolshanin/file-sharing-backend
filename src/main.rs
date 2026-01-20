@@ -3,11 +3,15 @@ mod models;
 mod dtos;
 mod error;
 mod db;
+mod router;
+
+use std::sync::Arc;
 
 use axum::http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}};
 use config::Config;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
+use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::filter::LevelFilter;
 
@@ -54,7 +58,35 @@ async fn main() {
         db_client: db_client.clone(),
     };
 
-    
-    
-    println!("config: {:?}", db_client);
+    let sched = JobScheduler::new().await.unwrap();
+
+    let job = Job::new_async("0 0 * * *", {
+        move |_, _| {
+            let db_client = db_client.clone();
+
+            Box::pin(async move {
+                println!("Running scheduled task to delete expired files...");
+                if let Err(err) = db_client.delete_expired_files().await {
+                    eprintln!("Error deleting expired files: {:?}", err);
+                } else {
+                    println!("Successfully deleted expired files.");
+                }
+            })
+        }
+    }).unwrap();
+
+    sched.add(job).await.unwrap();
+
+    tokio::spawn(async move {
+        sched.start().await.unwrap();
+    });
+
+    //let app = create_router(Arc::new(app_state.clone())).layer(cors.clone());
+
+    /* 
+    println!(
+        "{}",
+        format!("🚀 Server is running on http://localhost:{}", config.port)
+    );
+    */
 }
