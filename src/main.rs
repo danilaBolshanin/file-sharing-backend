@@ -3,6 +3,7 @@ mod db;
 mod dtos;
 mod error;
 mod middleware;
+mod handlers;
 mod models;
 mod router;
 mod utils;
