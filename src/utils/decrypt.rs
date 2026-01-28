@@ -1,5 +1,5 @@
-use aes::{Aes256, cipher};
-use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
+use aes::Aes256;
+use block_modes::{BlockMode, Cbc, block_padding::Pkcs7};
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 
 use crate::error::HttpError;
@@ -10,10 +10,9 @@ pub async fn decrypt_file(
     iv: Vec<u8>,
     user_private_key: &RsaPrivateKey,
 ) -> Result<Vec<u8>, HttpError> {
-    let aes_key = user_private_key.decrypt(
-        Pkcs1v15Encrypt, 
-        &encrypted_aes_key,
-    ).map_err(|e| HttpError::server_error(e.to_string()))?;
+    let aes_key = user_private_key
+        .decrypt(Pkcs1v15Encrypt, &encrypted_aes_key)
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
 
     let iv = iv;
 
@@ -22,7 +21,8 @@ pub async fn decrypt_file(
 
     let mut buffer = encrypted_file_data.clone();
 
-    let decrypted_data = cipher.decrypt_vec(&mut buffer)
+    let decrypted_data = cipher
+        .decrypt_vec(&mut buffer)
         .map_err(|e| HttpError::server_error(e.to_string()))?;
 
     Ok(decrypted_data)

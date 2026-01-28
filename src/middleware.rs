@@ -51,7 +51,17 @@ pub async fn auth(
         }
     };
 
-    let user_id = uuid::Uuid::parse_str(&token_details.to_string()).unwrap();
+    // OLD WITH unwrap()
+    // let user_id = uuid::Uuid::parse_str(&token_details.to_string()).unwrap();
+
+    let user_id = match uuid::Uuid::parse_str(&token_details.to_string()) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            return Err(HttpError::unauthorized(
+                ErrorMessage::InvalidToken.to_string(),
+            ));
+        }
+    };
 
     let user = app_state
         .db_client
