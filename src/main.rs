@@ -1,14 +1,18 @@
 mod config;
-mod models;
+mod db;
 mod dtos;
 mod error;
-mod db;
-mod utils;
+mod middleware;
+mod models;
 mod router;
+mod utils;
 
 use std::sync::Arc;
 
-use axum::http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}};
+use axum::http::{
+    HeaderValue, Method,
+    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+};
 use config::Config;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
@@ -36,17 +40,18 @@ async fn main() {
     let pool = match PgPoolOptions::new()
         .max_connections(10)
         .connect(&config.database_url)
-        .await {
-            Ok(pool) => {
-                println!("✅Connection to the database is successful!");
-                pool
-            }
-            Err(err) => {
+        .await
+    {
+        Ok(pool) => {
+            println!("✅Connection to the database is successful!");
+            pool
+        }
+        Err(err) => {
             println!("🔥 Failed to connect to the database: {:?}", err);
-                    std::process::exit(1); 
-            }
-        };
-    
+            std::process::exit(1);
+        }
+    };
+
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
@@ -74,7 +79,8 @@ async fn main() {
                 }
             })
         }
-    }).unwrap();
+    })
+    .unwrap();
 
     sched.add(job).await.unwrap();
 
@@ -84,7 +90,7 @@ async fn main() {
 
     //let app = create_router(Arc::new(app_state.clone())).layer(cors.clone());
 
-    /* 
+    /*
     println!(
         "{}",
         format!("🚀 Server is running on http://localhost:{}", config.port)
