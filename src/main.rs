@@ -2,8 +2,8 @@ mod config;
 mod db;
 mod dtos;
 mod error;
-mod middleware;
 mod handlers;
+mod middleware;
 mod models;
 mod router;
 mod utils;
@@ -89,12 +89,10 @@ async fn main() {
         sched.start().await.unwrap();
     });
 
-    //let app = create_router(Arc::new(app_state.clone())).layer(cors.clone());
+    let app = create_router(Arc::new(app_state.clone())).layer(cors.clone());
 
-    /*
     println!(
         "{}",
         format!("🚀 Server is running on http://localhost:{}", config.port)
     );
-    */
 }
